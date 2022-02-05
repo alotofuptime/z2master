@@ -19,7 +19,6 @@ async def course_page_html() -> str:
         browser = await p.chromium.launch()
         page = await browser.new_page()
         await page.goto("https://zerotomastery.io/courses/")
-        # print(await page.title())
         html = await page.content()
         await browser.close()
         return html
