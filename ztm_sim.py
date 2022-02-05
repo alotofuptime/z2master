@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 # TODO rename course_page_html
 # TODO create function to navigate all links returned by get_course_links
 # TODO extract course title, outline, & what you'll learn sections
-# TODO create ztm api to store extract data
+# TODO create ztm api to store extracted data
 async def main():
     html = await course_page_html()
     links = get_course_links(html)
