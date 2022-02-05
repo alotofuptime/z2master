@@ -29,7 +29,7 @@ def get_course_links(html: str) -> set:
     soup = BeautifulSoup(html, "html.parser")
     course_links = soup.find_all("a")
     for a_tag in course_links:
-        href = link.a_tag("href")
+        href = a_tag.get("href")
         if "/p/" in str( href ):
             href_set.add(href)
     return href_set
