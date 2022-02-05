@@ -8,17 +8,22 @@ from bs4 import BeautifulSoup
 # TODO create function to navigate all links returned by get_course_links
 # TODO extract course title, outline, & what you'll learn sections
 # TODO create ztm api to store extracted data
+# TODO create even loop
+
+url = "https://zerotomastery.io/courses/"
+
 async def main():
-    html = await course_page_html()
+    html = await course_page_html(url)
     links = get_course_links(html)
-    print(links)
+    course_titles = await parse_course_links(links)
+    print(course_titles)
 
 
-async def course_page_html() -> str:
+async def course_page_html(start_url: str) -> str:
     async with async_playwright() as p:
-        browser = await p.chromium.launch()
+        browser = await p.chromium.launch(headless=False)
         page = await browser.new_page()
-        await page.goto("https://zerotomastery.io/courses/")
+        await page.goto(start_url)
         html = await page.content()
         await browser.close()
         return html
@@ -33,6 +38,20 @@ def get_course_links(html: str) -> set:
         if "/p/" in str( href ):
             href_set.add(href)
     return href_set
+
+
+async def parse_course_links(urls: set) -> list:
+    titles = []
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False)
+        page = await browser.new_page()
+        for url in urls:
+            await page.goto(url)
+            title_xpath = "//h1" 
+            title = await page.query_selector(title_xpath)
+            titles.append(await title.inner_text())
+        return titles
+
 
 
 if __name__ == "__main__":
