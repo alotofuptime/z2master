@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 from lxml import html
 import aiohttp
 import asyncio
@@ -17,26 +16,48 @@ def get_course_links(html_string: str) -> list:
     return course_links
 
 
-# time card data point is something of value but it is the main courses page
-# TODO implement get_course_length into dictionary returned by parse_all_courses
+# time card data point is something of value but it is on the main courses page
+# TODO fix title mismatch in parse_all_courses only Complete Web Dev course is matching
+
+
 def get_course_length(html_string: str):
     tree = html.fromstring(html_string)
-    time_details = tree.xpath("//*[contains(@class, 'TimeDetails')]/text()")
-    return time_details
+    course_length = {}
+    content_divs = tree.xpath("//*[contains(@class, '__ContentContainer')]")
+    for div in content_divs:
+        time_details = div.xpath("./span[contains(@class, 'TimeDetails')]/text()")
+    # title is needed again here to determine which course the time_details data point applies
+        title = div.xpath("./a/text()")[0]
+    # return course_length
+        hours = float(time_details[0])
+        lessons = int(time_details[2])
+        course_length[title] = {
+                "hours": hours,
+                "lessons": lessons
+                } 
+        return course_length
 
 
-def parse_all_courses(html_string: str) -> dict:
-    tree = html.fromstring(html_string)
-    modules_xpath = "//*[@class='block__curriculum__section__lock-icon']/ following-sibling :: text()" 
+def parse_all_courses(course_url: str, main_url) -> dict:
+    tree = html.fromstring(course_url)
+    modules_xpath = "//*[@class='block__curriculum__section__lock-icon']/ following-sibling :: text()"
     modules = tree.xpath(modules_xpath)
     parsed_modules = [item.strip() for item in modules if not item == "\n  "]
     title = tree.xpath("//h1/b/text()")[0]
     instructors = tree.xpath("//p[@class='authors']/a/text()")
-    return {
+    content_quanity = get_course_length(main_url)
+    course_content = {
             'title': title,
             "modules": parsed_modules,
             "taught by": instructors
-            } 
+            }
+    if content_quanity.get(title, None):
+        course_content["hours"] = content_quanity[title]["hours"]
+        course_content["lessons"] = content_quanity[title]["lessons"]
+    else:
+        return "Title mismatch in parse_all_courses"
+
+    return course_content
 
 
 async def run_tasks(url, loop: asyncio.AbstractEventLoop):
@@ -49,7 +70,8 @@ async def run_tasks(url, loop: asyncio.AbstractEventLoop):
 
         for task in tasks:
             html = await task
-            course_data = parse_all_courses(html)
+            course_data = parse_all_courses(html, main_html)
+            # course_time = get_course_length(main_html)
             print(course_data)
 
 
