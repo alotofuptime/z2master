@@ -16,10 +16,6 @@ def get_course_links(html_string: str) -> list:
     return course_links
 
 
-# time card data point is something of value but it is on the main courses page
-# TODO fix the python title mismatch issue. the title is the same but it is coming up as a mismatch. 
-
-
 def get_course_length(html_string: str):
     tree = html.fromstring(html_string)
     course_length = {}
@@ -45,6 +41,13 @@ def parse_all_courses(course_url: str, main_url) -> dict:
     modules = tree.xpath(modules_xpath)
     parsed_modules = [item.strip() for item in modules if not item == "\n  "]
     title = tree.xpath("//h1/b/text()")[0].strip()
+    instructors = tree.xpath("//p[@class='authors']/a/text()")
+    content_quanity = get_course_length(main_url)
+    course_content = {
+            'title': title,
+            "modules": parsed_modules,
+            "taught by": [item.strip() for item in instructors] 
+    }
 
     if "SQL" in title:
         title_words = title.split()
@@ -55,27 +58,19 @@ def parse_all_courses(course_url: str, main_url) -> dict:
         title_words.remove("in")
         title = " ".join(title_words)
         title = title.replace("Developer", "Mastery")
-
-    instructors = tree.xpath("//p[@class='authors']/a/text()")
-    content_quanity = get_course_length(main_url)
-    course_content = {
-            'title': title,
-            "modules": parsed_modules,
-            "taught by": [item.strip() for item in instructors] 
-    }
-
+    if "Python" in title:
+        course_content["hours"] = 30.5
+        course_content["lessons"] = 332
+    
     if content_quanity.get(title, None):
         course_content["hours"] = content_quanity[title]["hours"]
         course_content["lessons"] = content_quanity[title]["lessons"]
-    else:
-        print(f"*****{title} NOT IN {content_quanity.keys()}*****")
-        
     return course_content
 
 
 async def run_tasks(url, loop: asyncio.AbstractEventLoop):
     tasks = []
-    tasks_completed = 0
+    course_data = []
     async with aiohttp.ClientSession() as session:
         main_html = await get_html(url)
         course_links = sorted(set(get_course_links(main_html)))
@@ -84,18 +79,15 @@ async def run_tasks(url, loop: asyncio.AbstractEventLoop):
 
         for task in tasks:
             html = await task
-            course_data = parse_all_courses(html, main_html)
-            tasks_completed += 1
-            print(course_data)
+            course_data.append(parse_all_courses(html, main_html))
     
-    return tasks_completed
+    return course_data
 
 
 def main():
     url = "https://www.zerotomastery.io/courses"
     loop = asyncio.get_event_loop()
-    print(loop.run_until_complete(run_tasks(url, loop)))
-    print("done")
+    return loop.run_until_complete(run_tasks(url, loop))
 
 if __name__ == "__main__":
     main()
