@@ -1,11 +1,16 @@
-import xpath_logic as xp
 import pandas as pd
 
 
-course_directory = xp.main() 
-df = pd.DataFrame()
-academy_api = df.from_dict(course_directory, orient="columns")
+# TODO optimize course selction with pandas + regex below are a few tests without regex
+# TODO create design patter for Academy emulation
+ztm_api = pd.read_csv("ztm.csv").drop(columns="Unnamed: 0")
+node_next_js = ztm_api[ztm_api["title"].str.contains(".js")]
+javascript_path = ztm_api[ztm_api["title"].str.contains("JavaScript")]
+react_path = ztm_api[ztm_api["title"].str.contains("React")]
+angular_path = ztm_api[ztm_api["title"].str.contains("Angular")]
+web_dev_path = ztm_api[ztm_api["title"].str.contains("Web Developer")]
+python_dev_path = ztm_api[ztm_api["title"].str.contains("Python")]
+data_sci_path = ztm_api[ztm_api["title"].str.contains("Data Science")]
 
-# saved csv to use in jupyter notebooks
-academy_api.to_csv("ztm.csv")
-# print(academy_api.head())
+print(ztm_api["title"])
+print(data_sci_path)
