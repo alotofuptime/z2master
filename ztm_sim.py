@@ -1,16 +1,28 @@
 import pandas as pd
 
 
-# TODO optimize course selction with pandas + regex below are a few tests without regex
-# TODO create design patter for Academy emulation
+# TODO create design pattern for Academy emulation
 ztm_api = pd.read_csv("ztm.csv").drop(columns="Unnamed: 0")
-node_next_js = ztm_api[ztm_api["title"].str.contains(".js")]
-javascript_path = ztm_api[ztm_api["title"].str.contains("JavaScript")]
-react_path = ztm_api[ztm_api["title"].str.contains("React")]
-angular_path = ztm_api[ztm_api["title"].str.contains("Angular")]
-web_dev_path = ztm_api[ztm_api["title"].str.contains("Web Developer")]
-python_dev_path = ztm_api[ztm_api["title"].str.contains("Python")]
-data_sci_path = ztm_api[ztm_api["title"].str.contains("Data Science")]
 
-print(ztm_api["title"])
-print(data_sci_path)
+# js_mask = ztm_api.modules.apply(lambda x: "Javascript" in x)
+# print(ztm_api[js_mask])
+
+# The 2 lines above are a recipe for repitition so I created this function insead
+def course_advisor(keyword: str) -> pd.core.frame.DataFrame:
+    acros = ["ui", "ux", "api", "html", "css", "sql", "js"]
+    try:
+        if keyword.lower() in acros:
+            keyword = keyword.upper()
+        else:
+            keyword = keyword.title()
+        keyword_mask = ztm_api.modules.apply(lambda x: keyword in x)
+        courses = ztm_api[keyword_mask]
+        if courses.empty:
+            return f"'{keyword}' doesn't match any search results. Try being more specific."
+        return courses
+    except AttributeError:
+        return f"Invalid keyword: {keyword} is of type {type(keyword)}. Keyword must be str."
+
+
+if __name__ == "__main__":
+    print(type(course_advisor("linux")))
