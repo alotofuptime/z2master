@@ -25,4 +25,4 @@ def course_advisor(keyword: str) -> pd.core.frame.DataFrame:
 
 
 if __name__ == "__main__":
-    print(type(course_advisor("linux")))
+    print(course_advisor("linux"))
