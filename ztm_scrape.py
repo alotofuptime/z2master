@@ -1,6 +1,7 @@
 from lxml import html
 import aiohttp
 import asyncio
+import csv
 
 
 async def get_html(url: str) -> str:
@@ -90,4 +91,9 @@ def main():
     return loop.run_until_complete(run_tasks(url, loop))
 
 if __name__ == "__main__":
-    main()
+    data = main()
+    with open("ztm.csv", "w", newline="") as file:
+        column_names = ["title", "modules", "taught by", "hours", "lessons"]
+        writer = csv.DictWriter(file, fieldnames=column_names)
+        writer.writeheader()
+        writer.writerows(data)
